@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+
+    <ul>
+      {% for food in object_list %}
+        <li>
+          Név: {{ food.name }}, Ár: {{ food.price }} Ft.-, Bolt neve: {{food.categories.sold_by}}
+        </li>
+      {% endfor %}
+    </ul>
+</body>
+</html>
