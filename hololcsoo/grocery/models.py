@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Grocery(models.Model):
@@ -27,7 +28,6 @@ class Food(models.Model):
     name = models.CharField(max_length=200)
     categories = models.ForeignKey(Category, blank=False, null=False, on_delete=models.CASCADE,
                                    related_name="categories")
-    price = models.FloatField()
     product_link = models.URLField()
     is_vegan = models.BooleanField()
     is_cooled = models.BooleanField()
@@ -44,9 +44,8 @@ class Price(models.Model):
     value = models.FloatField()
     unit = models.CharField(max_length=20)
     unit_price = models.FloatField()
-    timestamp = models.TimeField(auto_now=True)
+    timestamp = models.DateField(default=timezone.now)
 
     def __str__(self) -> str:
-        return f"{self.food.name}'s price @ {self.timestamp}"
-
+        return f"{self.food.categories.sold_by.grocery_name}: {self.food.name}'s price @ {self.timestamp}"
 
