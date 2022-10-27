@@ -3,14 +3,7 @@ import logging
 import re
 import time
 import unicodedata
-from django.conf import settings
-from django.core.management.base import BaseCommand
-from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.triggers.cron import CronTrigger
-from django_apscheduler.jobstores import DjangoJobStore
-from django_apscheduler.models import DjangoJobExecution
-from celery import Celery
-from celery import app, shared_task
+from celery import shared_task
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -120,7 +113,7 @@ def create_auchan_product_dict(html_product_list) -> dict:
     return product_dict
 
 
-@shared_task
+@shared_task(name='run_scheduled_jobs')
 def update_auchan_product_table():
     driver = launch_broswer('https://online.auchan.hu/shop')
     auchan_href_list = scrape_auchan_hrefs(driver)
