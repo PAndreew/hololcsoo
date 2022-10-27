@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 import logging
 import re
 import time
@@ -8,11 +9,13 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
+from celery import Celery
+from celery import app, shared_task
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-from grocery.models import Food, Price, Category
+from .models import Food, Price, Category
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +26,11 @@ options.add_argument('--incognito')
 options.add_argument('--start-maximized')
 
 
-def delete_old_job_executions(max_age=604_800):
-    """Deletes all apscheduler job execution logs older than `max_age`."""
-    DjangoJobExecution.objects.delete_old_job_executions(max_age)
+# def delete_old_job_executions(max_age=604_800):
+#     """Deletes all apscheduler job execution logs older than `max_age`."""
+#     DjangoJobExecution.objects.delete_old_job_executions(max_age)
 
-
+@shared_task
 def launch_broswer(start_url):
     """General function to start selenium driver"""
     driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
@@ -35,6 +38,7 @@ def launch_broswer(start_url):
     return driver
 
 
+@shared_task
 def scrape_auchan_hrefs(driver) -> list:
     """Scrape Auchan categories and put them into a list"""
     # driver = launch_broswer('https://online.auchan.hu/shop')
@@ -53,11 +57,13 @@ def scrape_auchan_hrefs(driver) -> list:
     return auchan_hrefs
 
 
+@shared_task
 def extract_auchan_categories(href_list) -> list:
     auchan_category_urls = [href for href in href_list if re.search('\\.c-.*[0-9]$', href)]
     return auchan_category_urls
 
 
+@shared_task
 def scrape_auchan_products(driver, category_url) -> list:
     """Scrape Auchan product info for a given category"""
     # driver = launch_broswer(category_url)
@@ -79,6 +85,7 @@ def scrape_auchan_products(driver, category_url) -> list:
     return product_list
 
 
+@shared_task
 def create_auchan_product_dict(html_product_list) -> dict:
     product_dict = {}
 
@@ -113,6 +120,7 @@ def create_auchan_product_dict(html_product_list) -> dict:
     return product_dict
 
 
+@shared_task
 def update_auchan_product_table():
     driver = launch_broswer('https://online.auchan.hu/shop')
     auchan_href_list = scrape_auchan_hrefs(driver)
@@ -148,8 +156,4 @@ def update_auchan_product_table():
         )
         new_auchan_price.save()
 
-
-class Command(BaseCommand):
-    def handle(self, *args, **options):
-        update_auchan_product_table()
 
