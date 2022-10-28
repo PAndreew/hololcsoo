@@ -39,11 +39,11 @@ def scrape_auchan_hrefs(driver) -> list:
     time.sleep(0.5)
     driver.find_element(By.ID, 'onetrust-accept-btn-handler').click()
     time.sleep(0.3)
-    # driver.find_element(By.CLASS_NAME, '_1DRX').click()
-    # time.sleep(0.3)
+    driver.find_element(By.CLASS_NAME, '_1DRX').click()
+    time.sleep(0.3)
     driver.find_element(By.CLASS_NAME, 'Tulx').click()
     time.sleep(0.2)
-    driver.find_element(By.CLASS_NAME, '_23Mg').click()
+    driver.find_elements(By.CLASS_NAME, '_23Mg')[1].click()
 
     auchan_hrefs = [element.get_attribute("href") for element in driver.find_elements(by=By.XPATH, value="//a[@href]")]
 
