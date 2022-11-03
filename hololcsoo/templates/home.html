@@ -1,19 +1,44 @@
 {% load static %}
-<!-- Include navbar -->
-{% include 'navbar.html'%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Home</title>
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'font_awesome/css/all.min.css' %}">
-    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
 </head>
 <body>
-    <h1>Hol olcsoo a ...</h1>
-    <form action="{% url 'search_results' %}" method="get">
-    <input name="q" type="text" placeholder="Search...">
-</form>
+    <!-- Include navbar -->
+    {% include 'navbar.html'%}
+    <div class="row container-fluid" id="content" style="margin-top: 80px">
+        <div class="col-1">
+        </div>
+        <div class="col-10">
+            {% block error %}
+            {% endblock %}
+            <!-- Include main content -->
+            <form action="{% url 'search_results' %}" method="get">
+                <div class="mb-3">
+                    <label for="mainSearch" class="form-label">Search</label>
+                    <input type="search" class="form-control" id="mainSearch" name="q" placeholder="name of a food">
+                </div>
+            </form>
+        </div>
+        <div class="col-1">
+        </div>
+        <div class="col-10">
+            <ul>
+              {% for food in object_list %}
+                <li>
+                  Név: {{ food.name }}, Ár: {{ food.price }} Ft.-, Bolt neve: {{food.categories.sold_by}}
+                </li>
+              {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 </body>
 </html>
