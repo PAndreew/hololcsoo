@@ -1,0 +1,55 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg navbar-dark static-top p-2" style="background-color: #a1220b;" xmlns="http://www.w3.org/1999/html">
+    <!-- Include logos -->
+    <span class="ms-2" id="navbar_id"> hololcsoo </span>
+
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <!-- Basic links for entity types -->
+        <ul class="navbar-nav me-auto">
+            <li>
+                <a id="shopping_list_nav_link" class="nav-link" href="" name="shopping_list">
+                    Bevasarlo lista
+                </a>
+            </li>
+        </ul>
+
+        <ul class="navbar-nav ms-auto">
+            {% if user.is_authenticated %}
+            <!-- User is logged in -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Welcome, "{{ user.get_username }}"!
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <li><a class="dropdown-item" id="edit_profile" href="">Edit profile</a></li>
+                    <li><a class="dropdown-item" id="change_password" href="">Change password</a></li>
+                    {% if request.user.is_superuser %}
+                    <div class="dropdown-divider"></div>
+                    <li><a class="dropdown-item" id="admin_page" href="/admin">Django admin page</a></li>
+                    {% endif %}
+                </ul>
+            </li>
+            <li><a id="log-out-button" class="nav-link" href="" name="log_out"><i class="fa fa-user-times pr-1" name="log_out"></i>Log out</a></li>
+            {% else %}
+            <!-- User is not logged in -->
+            <li><a id="sign-up-button" class="nav-link" href=""><i class="fa fa-user-plus pr-1" name="sign_up"></i>Sign up</a></li>
+            <li><a id="log-in-button" class="nav-link" href=""><i class="fa fa-user-circle-o pr-1" name="log_in"></i>Log in</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    <script>
+        var navlinks = document.getElementsByClassName("navbar-nav me-auto")
+        var clearScrollPos = function(){
+                sessionStorage.removeItem("scrollpos");
+        };
+        for (var i = 0; i < navlinks.length; i++) {
+            navlinks[i].addEventListener('click',clearScrollPos);
+        }
+    </script>
+</nav>
