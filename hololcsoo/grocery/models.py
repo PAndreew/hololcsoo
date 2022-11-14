@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -26,7 +27,10 @@ class Category(models.Model):
 
 class Food(models.Model):
     name = models.CharField(max_length=200)
-    categories = models.ForeignKey(Category, blank=False, null=False, on_delete=models.CASCADE,
+    categories = models.ForeignKey(Category,
+                                   blank=False,
+                                   null=False,
+                                   on_delete=models.CASCADE,
                                    related_name="categories")
     product_link = models.URLField()
     is_vegan = models.BooleanField()
@@ -34,6 +38,7 @@ class Food(models.Model):
     is_local_product = models.BooleanField()
     is_hungarian_product = models.BooleanField()
     is_bio = models.BooleanField()
+    is_favorite_of = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
 
     def __str__(self) -> str:
         return f"{self.name}"

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django_celery_beat',
     "grocery.apps.GroceryConfig",
+    "shopping_list.apps.ShoppingListConfig",
 ]
 
 MIDDLEWARE = [
