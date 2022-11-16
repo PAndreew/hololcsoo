@@ -39,6 +39,8 @@ class Food(models.Model):
     is_hungarian_product = models.BooleanField()
     is_bio = models.BooleanField()
     is_favorite_of = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    on_stock = models.BooleanField()
+    on_sale = models.BooleanField()
 
     def __str__(self) -> str:
         return f"{self.name}"
@@ -47,6 +49,7 @@ class Food(models.Model):
 class Price(models.Model):
     food = models.ForeignKey(Food, blank=False, null=False, on_delete=models.CASCADE, related_name="foods")
     value = models.FloatField()
+    sale_value = models.FloatField()
     unit = models.CharField(max_length=20)
     unit_price = models.FloatField()
     timestamp = models.DateField(default=timezone.now)
@@ -54,3 +57,6 @@ class Price(models.Model):
     def __str__(self) -> str:
         return f"{self.food.categories.sold_by.grocery_name}: {self.food.name}'s price @ {self.timestamp}"
 
+    @property
+    def sale_ratio(self):
+        return self.sale_value/self.value - 1
