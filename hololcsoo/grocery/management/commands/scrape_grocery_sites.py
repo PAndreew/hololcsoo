@@ -3,6 +3,8 @@ import re
 import time
 import unicodedata
 import requests
+from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
 from django.core.management.base import BaseCommand
 from bs4 import BeautifulSoup
 from PIL import Image
@@ -27,13 +29,37 @@ def launch_broswer(start_url):
     return driver
 
 
-def save_image_of_product(product_div, **kwargs):
+def check_availability_of_auchan_item(product_div) -> str:
+    item_availability = "Nincs készleten"
+    if product_div.find("div", class_='_2djl'):
+        item_availability = product_div.find("div", class_='_2djl').text
+    return item_availability
+
+
+def save_image_of_product(product_div, model_instance, **kwargs):
     image = product_div.find('img')
     image_url = image['src']
 
-    img = Image.open(requests.get(image_url, stream=True).raw)
+    # img = Image.open(requests.get(image_url, stream=True).raw)
 
-    img.save(f'{kwargs.get("product_name", "image")}.image.jpg')
+    # img.save(f'{kwargs.get("product_name", "image")}.jpg')
+    r = requests.get(image_url)
+
+    img_temp = NamedTemporaryFile(delete=True)
+    img_temp.write(r.content)
+    img_temp.flush()
+
+    model_instance.photo.save(f'{kwargs.get("product_name", "image")}.jpg', File(img_temp), save=True)
+
+
+# def save_image_from_url(model, url):
+#     r = requests.get(url)
+#
+#     img_temp = NamedTemporaryFile(delete=True)
+#     img_temp.write(r.content)
+#     img_temp.flush()
+#
+#     model.image.save("image.jpg", File(img_temp), save=True)
 
 
 def scrape_auchan_hrefs(driver) -> list:
@@ -81,80 +107,76 @@ def scrape_auchan_products(driver, category_url) -> list:
     return product_list
 
 
-def create_auchan_product_dict(html_product_list) -> dict:
-    product_dict = {}
-
+def create_or_update_auchan_products(html_product_list) -> None:
     for productDiv in html_product_list:
         badge_names = [image['alt'] for image in productDiv.find_all("img", class_='_2Py5')]
         product_name = productDiv.find("a", class_='_2J-k').find("span").text
-        product_dict[product_name] = {
-            'name': product_name,
-            'category': 'c-6537',
-            'sold_by': 'Auchan',
-            'price': productDiv.find("div", class_='_3vje').text,
-            'sale_price': productDiv.find("div", class_='_3vje').text,
-            'unit_price': productDiv.find("div", class_='_20Mg').text,
-            'is_vegan': False,
-            'is_cooled': False,
-            'is_local_product': False,
-            'is_bio': False,
-            'on_stock': True,
-            'on_sale': False,
-            'product_url': dict.fromkeys(filter(('javascript: void(0)').__ne__, [category['href'] for category in
-                                                                                 productDiv.find_all("a",
-                                                                                                     href=True)])).keys()
-        }
+        is_cooled = False
+        is_local_product = False
+        is_bio = False
         if badge_names:
             for badge_name in badge_names:
                 if badge_name.strip() == "Hűtött termék":
-                    product_dict[product_name]['is_cooled'] = True
+                    is_cooled = True
                 if badge_name.strip() == "Magyar termék":
-                    product_dict[product_name]['is_local_product'] = True
+                    is_local_product = True
                 if "Hazai Termék" in badge_name.strip():
-                    product_dict[product_name]['is_local_product'] = True
+                    is_local_product = True
                 if badge_name.strip() == "BIO":
-                    product_dict[product_name]['is_bio'] = True
-                if badge_name.strip() == "Kiemelt termék":
-                    product_dict[product_name]['on_sale'] = True
-                    product_dict[product_name]['sale_price'] = productDiv.find("div", class_='X9nF').text
+                    is_bio = True
+        if not Item.objects.filter(categories__sold_by__grocery_name="Auchan", name=product_name).exists():
+            new_auchan_item = Item(
+                name=product_name,
+                sold_by='Auchan',
+                is_vegan=False,
+                is_cooled=is_cooled,
+                is_local_product=is_local_product,
+                is_bio=is_bio,
+                on_stock=check_availability_of_auchan_item(productDiv),
+                product_url=dict.fromkeys(filter(('javascript: void(0)').__ne__, [category['href'] for category in
+                                                                                  productDiv.find_all(
+                                                                                      "a", href=True)])).keys()
+            )
+            save_image_of_product(productDiv, new_auchan_item, product_name=product_name)
+            new_auchan_item.save()
 
-    return product_dict
+
+def create_or_update_auchan_prices(html_product_list) -> None:
+    for productDiv in html_product_list:
+        badge_names = [image['alt'] for image in productDiv.find_all("img", class_='_2Py5')]
+        product_name = productDiv.find("a", class_='_2J-k').find("span").text
+        product_price = productDiv.find("div", class_='_3vje').text
+        sale_price = product_price
+        unit_price = productDiv.find("div", class_='_20Mg').text
+        if badge_names:
+            for badge_name in badge_names:
+                if badge_name.strip() == "Kiemelt termék":
+                    sale_price = productDiv.find("div", class_='X9nF').text
+        new_auchan_price = Price(
+            food=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
+                                     name=product_name).get(),
+            value=float(''.join(char for char in unicodedata.normalize('NFKD', product_price) if
+                                char.isdigit())),
+            sale_value=float(''.join(char for char in unicodedata.normalize('NFKD', sale_price) if
+                                     char.isdigit())),
+            unit=unicodedata.normalize('NFKD', unit_price).split(" ")[-1],
+            unit_price=float(''.join(char for char in
+                                     unicodedata.normalize('NFKD', unit_price).split("/")[0] if
+                                     char.isdigit())),
+        )
+        new_auchan_price.save()
 
 
 def update_auchan_product_table():
     driver = launch_broswer('https://online.auchan.hu/shop')
     auchan_href_list = scrape_auchan_hrefs(driver)
     auchan_category_url_list = extract_auchan_categories(auchan_href_list)
-    auchan_product_list = []
+    combined_auchan_product_list = []
     for url in auchan_category_url_list[:2]:
-        auchan_product_list.extend(scrape_auchan_products(driver, url))
+        combined_auchan_product_list.extend(scrape_auchan_products(driver, url))
     # print(auchan_product_list)
-    auchan_product_dict = create_auchan_product_dict(auchan_product_list)
-    print(auchan_product_dict)
-    for auchan_product in auchan_product_dict.values():
-        if not Item.objects.filter(categories__sold_by__grocery_name="Auchan", name=auchan_product["name"]).exists():
-            new_auchan_product = Item(
-                name=auchan_product['name'],
-                categories=Category.objects.get(category_id=auchan_product['category']),
-                product_link=auchan_product['product_url'],
-                is_vegan=auchan_product['is_vegan'],
-                is_cooled=auchan_product['is_cooled'],
-                is_local_product=auchan_product['is_local_product'],
-                is_hungarian_product=False,
-                is_bio=auchan_product['is_bio'],
-            )
-            new_auchan_product.save()
-        new_auchan_price = Price(
-            food=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
-                                     name=auchan_product["name"]).get(),
-            value=float(''.join(char for char in unicodedata.normalize('NFKD', auchan_product["price"]) if
-                                char.isdigit())),
-            unit=unicodedata.normalize('NFKD', auchan_product["unit_price"]).split(" ")[-1],
-            unit_price=float(''.join(char for char in
-                                     unicodedata.normalize('NFKD', auchan_product["unit_price"]).split("/")[0] if
-                                     char.isdigit())),
-        )
-        new_auchan_price.save()
+    create_or_update_auchan_products(combined_auchan_product_list)
+    create_or_update_auchan_prices(combined_auchan_product_list)
 
 
 def scrape_spar_categories() -> list:
@@ -167,11 +189,11 @@ def scrape_spar_categories() -> list:
     return spar_href_list
 
 
-def scrape_spar_products(driver, category_url) -> list:
+def scrape_spar_product_html_list(driver, category_url) -> list:
     """Scrape SPAR product info for a given category"""
     driver.get(f"https://www.spar.hu{category_url}")
 
-    product_list = []
+    html_product_list = []
     y = 500
     total_height = 2001
 
@@ -182,43 +204,67 @@ def scrape_spar_products(driver, category_url) -> list:
         for WebElement in elements:
             element_html = WebElement.get_attribute('outerHTML')  # gives exact HTML content of the element
             element_soup = BeautifulSoup(element_html, 'html.parser')
-            product_list.append(element_soup)
+            html_product_list.append(element_soup)
         time.sleep(1.5)
 
-    return product_list
+    return html_product_list
 
 
-def create_spar_product_dict(html_product_list) -> dict:
-    product_dict = {}
-
+def create_or_update_spar_products(html_product_list) -> dict:
     for productBox in html_product_list:
         badge_name = productBox.find("div", class_='badgeName')
         product_name = productBox.find("a", id=lambda x: x and x.startswith('product-')).text
-        save_image_of_product(productBox, product_name=product_name)
-        product_dict[product_name] = {
-            'name': product_name,
-            'sold_by': 'SPAR',
-            'price': productBox.find("label", class_='priceInteger').text,
-            'sale_price': productBox.find("label", class_='priceInteger').text,
-            'unit_price': productBox.find("label", class_='extraInfoPrice').text,
-            'is_vegan': False,
-            'is_cooled': False,
-            'is_local_product': False,
-            'is_bio': False,
-            'on_stock': 'Készleten',
-            'product_url': [category['href'] for category in productBox.find_all("a", href=True)][0]
-        }
+        is_cooled = False
+        is_local_product = False
+        is_bio = False
         if badge_name:
             if badge_name.text.strip() == "Hűtött":
-                product_dict[product_name]['is_cooled'] = True
+                is_cooled = True
             if badge_name.text.strip() == "Hazai Termék":
-                product_dict[product_name]['is_local_product'] = True
+                is_local_product = True
             if badge_name.text.strip() == "BIO":
-                product_dict[product_name]['is_bio'] = True
-            if badge_name.text.strip() == "Akció":
-                product_dict[product_name]['sale_price'] = productBox.find("label", class_='insteadOfPrice').text,
+                is_bio = True
+        if not Item.objects.filter(categories__sold_by__grocery_name="Auchan", name=product_name).exists():
+            new_spar_item = Item(
+                name=product_name,
+                categories=Category.objects.filter(sold_by__grocery_name="Auchan").get(),
+                is_vegan=False,
+                is_cooled=is_cooled,
+                is_local_product=is_local_product,
+                is_bio=is_bio,
+                on_stock='Készleten',
+                product_link=[category['href'] for category in productBox.find_all("a", href=True)][0]
+            )
 
-    return product_dict
+            save_image_of_product(productBox, new_spar_item, product_name=product_name)
+            new_spar_item.save()
+
+
+def create_or_update_spar_prices(html_product_list) -> None:
+    for productDiv in html_product_list:
+        badge_name = productDiv.find("div", class_='badgeName')
+        product_name = productDiv.find("a", id=lambda x: x and x.startswith('product-')).text
+        product_price = productDiv.find("label", class_='priceInteger').text
+        sale_price = product_price
+        unit_price = productDiv.find("label", class_='extraInfoPrice').text
+        if badge_name:
+            if badge_name.text.strip() == "Akció":
+                sale_price = productDiv.find("label", class_='insteadOfPrice').text,
+        new_spar_price = Price(
+            item=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
+                                     name=product_name).get(),
+            value=float(''.join(char for char in
+                                     unicodedata.normalize('NFKD', product_price) if
+                                     char.isdigit())),
+            sale_value=float(''.join(char for char in
+                                     unicodedata.normalize('NFKD', sale_price) if
+                                     char.isdigit())),
+            unit=unit_price.split("/")[-1],
+            unit_price=float(''.join(char for char in
+                                     unicodedata.normalize('NFKD', unit_price).split(",")[0] if
+                                     char.isdigit())),
+        )
+        new_spar_price.save()
 
 
 def update_spar_product_table():
@@ -226,13 +272,14 @@ def update_spar_product_table():
     driver = launch_broswer('https://www.spar.hu/onlineshop/')
     spar_product_list = []
     for url in spar_category_url_list[:2]:
-        spar_product_list.extend(scrape_spar_products(driver, url))
+        spar_product_list.extend(scrape_spar_product_html_list(driver, url))
     # print(auchan_product_list)
-    spar_product_dict = create_spar_product_dict(spar_product_list)
-    print(spar_product_dict)
+    create_or_update_spar_products(spar_product_list)
+    create_or_update_spar_prices(spar_product_list)
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        update_auchan_product_table()
+        update_spar_product_table()
+        # update_auchan_product_table()
 

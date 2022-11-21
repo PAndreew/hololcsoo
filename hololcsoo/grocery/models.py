@@ -28,19 +28,18 @@ class Category(models.Model):
 class Item(models.Model):
     name = models.CharField(max_length=200)
     categories = models.ForeignKey(Category,
-                                   blank=False,
-                                   null=False,
+                                   blank=True,
+                                   null=True,
                                    on_delete=models.CASCADE,
                                    related_name="categories")
     product_link = models.URLField()
+    photo = models.ImageField(upload_to="product_photos")
     is_vegan = models.BooleanField()
     is_cooled = models.BooleanField()
     is_local_product = models.BooleanField()
-    is_hungarian_product = models.BooleanField()
     is_bio = models.BooleanField()
     is_favorite_of = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
-    on_stock = models.BooleanField()
-    on_sale = models.BooleanField()
+    on_stock = models.CharField(max_length=50)
 
     def __str__(self) -> str:
         return f"{self.name}"
@@ -56,7 +55,3 @@ class Price(models.Model):
 
     def __str__(self) -> str:
         return f"{self.item.categories.sold_by.grocery_name}: {self.food.name}'s price @ {self.timestamp}"
-
-    @property
-    def sale_ratio(self):
-        return self.sale_value/self.value - 1

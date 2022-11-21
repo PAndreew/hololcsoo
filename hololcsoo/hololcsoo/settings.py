@@ -55,6 +55,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "hololcsoo.urls"
 
+MEDIA_ROOT = BASE_DIR / "media/images/"
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
