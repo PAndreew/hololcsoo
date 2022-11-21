@@ -8,9 +8,9 @@
     <h1>Search Results</h1>
 
     <ul>
-      {% for food in object_list %}
+      {% for item in object_list %}
         <li>
-          Név: {{ food.name }}, Ár: {{ food.price }} Ft.-, Bolt neve: {{food.categories.sold_by}}
+          Név: {{ item.name }}, Ár: {{ item.price }} Ft.-, Bolt neve: {{food.categories.sold_by}}
         </li>
       {% endfor %}
     </ul>

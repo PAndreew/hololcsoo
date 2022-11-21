@@ -25,7 +25,7 @@ class Category(models.Model):
         return f"{self.category_name}"
 
 
-class Food(models.Model):
+class Item(models.Model):
     name = models.CharField(max_length=200)
     categories = models.ForeignKey(Category,
                                    blank=False,
@@ -47,7 +47,7 @@ class Food(models.Model):
 
 
 class Price(models.Model):
-    food = models.ForeignKey(Food, blank=False, null=False, on_delete=models.CASCADE, related_name="foods")
+    item = models.ForeignKey(Item, blank=False, null=False, on_delete=models.CASCADE, related_name="items")
     value = models.FloatField()
     sale_value = models.FloatField()
     unit = models.CharField(max_length=20)
@@ -55,7 +55,7 @@ class Price(models.Model):
     timestamp = models.DateField(default=timezone.now)
 
     def __str__(self) -> str:
-        return f"{self.food.categories.sold_by.grocery_name}: {self.food.name}'s price @ {self.timestamp}"
+        return f"{self.item.categories.sold_by.grocery_name}: {self.food.name}'s price @ {self.timestamp}"
 
     @property
     def sale_ratio(self):

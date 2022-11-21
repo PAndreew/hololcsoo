@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.db import models
-from grocery.models import Food
+from grocery.models import Item
 
 
 class ShoppingList(models.Model):
-    items = models.ManyToManyField(Food, through='ShoppingListItem')
+    items = models.ManyToManyField(Item, through='ShoppingListItem')
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     nickname = models.CharField(max_length=50)
 
@@ -13,7 +13,7 @@ class ShoppingList(models.Model):
 
 
 class ShoppingListItem(models.Model):
-    item = models.ForeignKey(Food, on_delete=models.SET_NULL, null=True)
+    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
     shopping_list = models.ForeignKey(ShoppingList, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
 

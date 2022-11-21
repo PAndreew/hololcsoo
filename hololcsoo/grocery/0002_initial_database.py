@@ -7,13 +7,13 @@ auchan_product_dict = {'Abaúj tej dobozos 2,8% 1 l': {'name': 'Abaúj tej doboz
 def create_model_instances(apps, schema_editor):
     Grocery = apps.get_model("grocery", "Grocery")
     Category = apps.get_model("grocery", "Category")
-    Food = apps.get_model("grocery", "Food")
+    Item = apps.get_model("grocery", "Item")
     Price = apps.get_model("grocery", "Price")
 
     create_groceries(Grocery)
     create_categories(Category, Grocery)
-    create_foods(Food, Category)
-    create_prices(Price, Food)
+    create_items(Item, Category)
+    create_prices(Price, Item)
 
 
 def create_groceries(Grocery):
@@ -48,50 +48,54 @@ def create_categories(Category, Grocery):
         category.save()
 
 
-def create_foods(Food, Category):
-    for food_attributes in spar_product_dict.values():
-        spar_food = Food(
-                name=food_attributes['name'],
-                categories=Category.objects.get(category_id=food_attributes['category']),
-                product_link=food_attributes['product_url'],
-                is_vegan=food_attributes['is_vegan'],
-                is_cooled=food_attributes['is_cooled'],
-                is_local_product=food_attributes['is_local_product'],
-                is_hungarian_product=food_attributes['is_hungarian_product'],
-                is_bio=food_attributes['is_bio'],
+def create_items(Item, Category):
+    for item_attributes in spar_product_dict.values():
+        spar_item = Item(
+                name=item_attributes['name'],
+                categories=Category.objects.get(category_id=item_attributes['category']),
+                product_link=item_attributes['product_url'],
+                is_vegan=item_attributes['is_vegan'],
+                is_cooled=item_attributes['is_cooled'],
+                is_local_product=item_attributes['is_local_product'],
+                is_hungarian_product=item_attributes['is_hungarian_product'],
+                is_bio=item_attributes['is_bio'],
             )
-        spar_food.save()
+        spar_item.save()
 
-    for food_attributes in auchan_product_dict.values():
-        auchan_food = Food(
-                name=food_attributes['name'],
-                categories=Category.objects.get(category_id=food_attributes['category']),
-                product_link=food_attributes['product_url'],
-                is_vegan=food_attributes['is_vegan'],
-                is_cooled=food_attributes['is_cooled'],
-                is_local_product=food_attributes['is_local_product'],
+    for item_attributes in auchan_product_dict.values():
+        auchan_item = Item(
+                name=item_attributes['name'],
+                categories=Category.objects.get(category_id=item_attributes['category']),
+                product_link=item_attributes['product_url'],
+                is_vegan=item_attributes['is_vegan'],
+                is_cooled=item_attributes['is_cooled'],
+                is_local_product=item_attributes['is_local_product'],
                 is_hungarian_product=False,
-                is_bio=food_attributes['is_bio'],
+                is_bio=item_attributes['is_bio'],
+                on_stock=True,
+                on_sale=False,
             )
 
-        auchan_food.save()
+        auchan_item.save()
 
 
-def create_prices(Price, Food):
-    for food_attributes in spar_product_dict.values():
+def create_prices(Price, Item):
+    for item_attributes in spar_product_dict.values():
         spar_price = Price(
-                food=Food.objects.filter(categories__sold_by__grocery_name="SPAR", name=food_attributes["name"]).get(),
-                value=food_attributes['price'],
+                item=Item.objects.filter(categories__sold_by__grocery_name="SPAR", name=item_attributes["name"]).get(),
+                value=item_attributes['price'],
+                sale_value=item_attributes['price'],
                 unit='SI',
                 unit_price=1000.0,
             )
 
         spar_price.save()
 
-    for food_attributes in auchan_product_dict.values():
+    for item_attributes in auchan_product_dict.values():
         auchan_price = Price(
-                food=Food.objects.filter(categories__sold_by__grocery_name="Auchan", name=food_attributes["name"]).get(),
-                value=food_attributes['price'],
+                item=Item.objects.filter(categories__sold_by__grocery_name="Auchan", name=item_attributes["name"]).get(),
+                value=item_attributes['price'],
+                sale_value=item_attributes['price'],
                 unit='SI',
                 unit_price=1000.0,
             )

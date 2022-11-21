@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-from .models import Food, Price, Category
+from .models import Item, Price, Category
 
 logger = logging.getLogger(__name__)
 
@@ -125,8 +125,8 @@ def update_auchan_product_table():
     auchan_product_dict = create_auchan_product_dict(auchan_product_list)
     print(auchan_product_dict)
     for auchan_product in auchan_product_dict.values():
-        if not Food.objects.filter(categories__sold_by__grocery_name="Auchan", name=auchan_product["name"]).exists():
-            new_auchan_product = Food(
+        if not Item.objects.filter(categories__sold_by__grocery_name="Auchan", name=auchan_product["name"]).exists():
+            new_auchan_product = Item(
                 name=auchan_product['name'],
                 categories=Category.objects.get(category_id=auchan_product['category']),
                 product_link=auchan_product['product_url'],
@@ -138,7 +138,7 @@ def update_auchan_product_table():
             )
             new_auchan_product.save()
         new_auchan_price = Price(
-            food=Food.objects.filter(categories__sold_by__grocery_name="Auchan",
+            food=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
                                      name=auchan_product["name"]).get(),
             value=float(''.join(char for char in unicodedata.normalize('NFKD', auchan_product["price"]) if
                                 char.isdigit())),
