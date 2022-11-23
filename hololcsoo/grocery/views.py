@@ -18,6 +18,7 @@ class SearchResultsView(ListView):
         query = self.request.GET.get("q")
         day_of_newest_data = Price.objects.latest('timestamp').timestamp.day
         price_list = Price.objects.filter(
-            Q(item__name__icontains=query) | Q(timestamp__day=day_of_newest_data)
+            Q(item__name__icontains=query) & Q(timestamp__day=day_of_newest_data)
+            # Q(item__name__icontains=query)
         ).order_by('value')
         return price_list

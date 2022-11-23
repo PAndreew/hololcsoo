@@ -7,7 +7,7 @@ from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
 from django.core.management.base import BaseCommand
 from bs4 import BeautifulSoup
-from PIL import Image
+# from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
@@ -153,7 +153,7 @@ def create_or_update_auchan_prices(html_product_list) -> None:
                 if badge_name.strip() == "Kiemelt termék":
                     sale_price = productDiv.find("div", class_='X9nF').text
         new_auchan_price = Price(
-            food=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
+            item=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
                                      name=product_name).get(),
             value=float(''.join(char for char in unicodedata.normalize('NFKD', product_price) if
                                 char.isdigit())),

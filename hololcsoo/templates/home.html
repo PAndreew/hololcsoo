@@ -27,31 +27,49 @@
             </form>
         </div>
     </div>
+    <div class="py-5">
+        <div class="container">
+            <div class="row hidden-md-up">
       {% for price in price_list %}
-        <div class="row container-fluid" id="card" style="margin-top: 10px">
-            <div class="col-1">
-            </div>
-            <div class="col-10">
-                <div class="card text-center">
-                  <div class="card-header">
-                    <ul class="nav nav-pills card-header-pills">
-                      <li class="nav-item">
-                        <a class="nav-link active" href="#">Overview</a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="#">Link</a>
-                      </li>
-                    </ul>
-                  </div>
-                  <div class="card-body">
-                    <h5 class="card-title">{{ price.item.name }}</h5>
-                    <p class="card-text">Ár: {{ price.value }} Ft.-, Bolt neve: {{price.item.categories.sold_by}}</p>
-                    <a href="#" class="btn btn-primary">Hoci ide!</a>
-                  </div>
+        <!-- <div class="height d-flex justify-content-center align-items-center"> -->
+        <div class="col-sm-3">
+        <div class="card p-3" id="card" style="margin-top: 10px">
+
+            <div class="d-flex justify-content-between align-items-center ">
+                <div class="mt-2">
+                    <h4 class="text-uppercase">{{price.item.categories.sold_by}}</h4>
+                    <div class="mt-5">
+                        <h5 class="text-uppercase mb-0">{{ price.item.name }}</h5>
+                    </div>
+                </div>
+                <div class="image">
+                    <img src="{{ price.item.photo.url }}" width="200">
                 </div>
             </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
+                <span>Tags</span>
+                <div class="colors">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+            </div>
+
+
+            <p>Ár: {{ price.value }} Ft.-</p>
+
+            <button class="btn btn-danger">Add to shopping list</button>
         </div>
+
+    </div>
+
       {% endfor %}
+            </div>
+    </div>
+    </div>
 
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 </body>

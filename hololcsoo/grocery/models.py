@@ -54,4 +54,4 @@ class Price(models.Model):
     timestamp = models.DateField(default=timezone.now)
 
     def __str__(self) -> str:
-        return f"{self.item.categories.sold_by.grocery_name}: {self.food.name}'s price @ {self.timestamp}"
+        return f"{self.item.categories.sold_by.grocery_name}: {self.item.name}'s price @ {self.timestamp}"
