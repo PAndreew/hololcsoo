@@ -24,6 +24,9 @@
                     <label for="mainSearch" class="form-label">Search</label>
                     <input type="search" class="form-control" id="mainSearch" name="q" placeholder="name of a food">
                 </div>
+                <div hx-get="/bio_results">
+                    <button class="btn btn-success">Filter</button>
+                </div>
             </form>
         </div>
     </div>
@@ -43,7 +46,7 @@
                     </div>
                 </div>
                 <div class="image">
-                    <img src="{{ price.item.photo.url }}" width="200">
+                    <img src="{{ price.item.photo.url }}" class="img-fluid">
                 </div>
             </div>
 
@@ -72,5 +75,6 @@
     </div>
 
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'htmx/js/htmx.min.js' %}"></script>
 </body>
 </html>
