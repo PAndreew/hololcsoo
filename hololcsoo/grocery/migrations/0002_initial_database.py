@@ -23,6 +23,7 @@ def create_groceries(Grocery):
     ]
 
     for grocery in groceries:
+        grocery.photo = f"/grocery_photos/{grocery.grocery_name.lower()}-logo.svg"
         grocery.save()
 
 

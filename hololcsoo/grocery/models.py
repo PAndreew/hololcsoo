@@ -5,6 +5,7 @@ from django.utils import timezone
 
 class Grocery(models.Model):
     grocery_name = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to="grocery_photos")
 
     class Meta:
         verbose_name_plural = "groceries"
@@ -47,10 +48,10 @@ class Item(models.Model):
 
 class Price(models.Model):
     item = models.ForeignKey(Item, blank=False, null=False, on_delete=models.CASCADE, related_name="items")
-    value = models.FloatField()
-    sale_value = models.FloatField()
-    unit = models.CharField(max_length=20)
-    unit_price = models.FloatField()
+    value = models.DecimalField(max_digits=9, decimal_places=1)
+    sale_value = models.DecimalField(max_digits=9, decimal_places=1)
+    unit = models.CharField(max_length=20, default="darab")
+    unit_price = models.DecimalField(max_digits=9, decimal_places=1)
     timestamp = models.DateField(default=timezone.now)
 
     def __str__(self) -> str:

@@ -21,7 +21,6 @@ class SearchResultsView(ListView):
             Q(item__name__icontains=query) & Q(timestamp__day=day_of_newest_data)
             # Q(item__name__icontains=query)
         ).order_by('value')
-        print(price_list)
         return price_list
 
 
@@ -31,7 +30,7 @@ class FilterBioProductsView(ListView):
     ordering = ['-value']
 
     def get_queryset(self):
-        query = self.request.GET.get("mobile-search")
+        query = self.request.GET.get("q")
         day_of_newest_data = Price.objects.latest('timestamp').timestamp.day
         bio_price_list = Price.objects.filter(
             Q(item__name__icontains=query) & Q(timestamp__day=day_of_newest_data) & Q(item__is_bio=True)
