@@ -54,7 +54,7 @@ def save_image_of_spar_product(product_div, model_instance, **kwargs):
 
 
 def save_image_of_auchan_product(product_div, model_instance, **kwargs):
-    image = product_div.find("picture", class_='_lrgv')
+    image = product_div.find("picture", class_='_1rgv')
     #  image_url = image['srcset']
     image_url = image.find('source', {'type': 'image/webp'})["srcset"]
 
@@ -78,6 +78,11 @@ def save_image_of_auchan_product(product_div, model_instance, **kwargs):
 #     img_temp.flush()
 #
 #     model.image.save("image.jpg", File(img_temp), save=True)
+def close_modal_if_present(driver) -> None:
+    modal = driver.find_elements(By.ID, 'onetrust-accept-btn-handler')
+    if modal:
+        modal[0].click()
+    time.sleep(0.3)
 
 
 def scrape_auchan_hrefs(driver) -> list:
@@ -85,10 +90,11 @@ def scrape_auchan_hrefs(driver) -> list:
     # driver = launch_broswer('https://online.auchan.hu/shop')
     driver.get('https://online.auchan.hu/shop')
     time.sleep(0.5)
-    driver.find_element(By.ID, 'onetrust-accept-btn-handler').click()
-    time.sleep(0.3)
-    #  driver.find_element(By.CLASS_NAME, '_1DRX').click()
+    close_modal_if_present(driver)
+    #  driver.find_element(By.ID, 'onetrust-accept-btn-handler').click()
     #  time.sleep(0.3)
+    driver.find_element(By.CLASS_NAME, '_1DRX').click()
+    time.sleep(0.3)
     driver.find_element(By.CLASS_NAME, 'Tulx').click()
     time.sleep(0.2)
     driver.find_element(By.CLASS_NAME, '_23Mg').click()
@@ -191,7 +197,7 @@ def update_auchan_product_table():
     auchan_href_list = scrape_auchan_hrefs(driver)
     auchan_category_url_list = extract_auchan_categories(auchan_href_list)
     combined_auchan_product_list = []
-    for url in auchan_category_url_list[:1]:
+    for url in auchan_category_url_list[:3]:
         combined_auchan_product_list.extend(scrape_auchan_products(driver, url))
     # print(auchan_product_list)
     create_or_update_auchan_products(combined_auchan_product_list)
