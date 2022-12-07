@@ -56,3 +56,6 @@ class Price(models.Model):
 
     def __str__(self) -> str:
         return f"{self.item.categories.sold_by.grocery_name}: {self.item.name}'s price @ {self.timestamp}"
+
+    class Meta:
+        unique_together = ('value', 'timestamp', 'item')

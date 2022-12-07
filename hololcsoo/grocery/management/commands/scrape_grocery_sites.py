@@ -85,14 +85,22 @@ def close_modal_if_present(driver) -> None:
     time.sleep(0.3)
 
 
+def close_cookie_modal_if_present(driver) -> None:
+    cookie_modal = driver.find_elements(By.ID, 'onetrust-accept-btn-handler')
+    if cookie_modal:
+        cookie_modal[1].click()
+    time.sleep(0.3)
+
+
 def scrape_auchan_hrefs(driver) -> list:
     """Scrape Auchan categories and put them into a list"""
     # driver = launch_broswer('https://online.auchan.hu/shop')
     driver.get('https://online.auchan.hu/shop')
     time.sleep(0.5)
     close_modal_if_present(driver)
-    #  driver.find_element(By.ID, 'onetrust-accept-btn-handler').click()
-    #  time.sleep(0.3)
+    # close_cookie_modal_if_present(driver)
+    # driver.find_element(By.ID, 'onetrust-accept-btn-handler').click()
+    # time.sleep(0.3)
     driver.find_element(By.CLASS_NAME, '_1DRX').click()
     time.sleep(0.3)
     driver.find_element(By.CLASS_NAME, 'Tulx').click()
@@ -170,6 +178,7 @@ def create_or_update_auchan_prices(html_product_list) -> None:
     for productDiv in html_product_list:
         badge_names = [image['alt'] for image in productDiv.find_all("img", class_='_2Py5')]
         product_name = productDiv.find("a", class_='_2J-k').find("span").text
+        print(product_name)
         product_price = productDiv.find("div", class_='_3vje').text
         sale_price = product_price
         unit_price = productDiv.find("div", class_='_20Mg').text
@@ -177,7 +186,7 @@ def create_or_update_auchan_prices(html_product_list) -> None:
             for badge_name in badge_names:
                 if badge_name.strip() == "Kiemelt termék":
                     sale_price = productDiv.find("div", class_='X9nF').text
-        new_auchan_price = Price(
+        Price.objects.get_or_create(
             item=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
                                      name=product_name).get(),
             value=Decimal(''.join(char for char in unicodedata.normalize('NFKD', product_price) if
@@ -189,7 +198,7 @@ def create_or_update_auchan_prices(html_product_list) -> None:
                                      unicodedata.normalize('NFKD', unit_price).split("/")[0] if
                                      char.isdigit())),
         )
-        new_auchan_price.save()
+        # new_auchan_price.save()
 
 
 def update_auchan_product_table():
@@ -274,8 +283,8 @@ def create_or_update_spar_prices(html_product_list) -> None:
         unit_price = productDiv.find("label", class_='extraInfoPrice').text
         if badge_name:
             if badge_name.text.strip() == "Akció":
-                sale_price = productDiv.find("label", class_='insteadOfPrice').text,
-        new_spar_price = Price(
+                sale_price = productDiv.find("label", class_='insteadOfPrice').text
+        Price.objects.get_or_create(
             item=Item.objects.filter(categories__sold_by__grocery_name="Auchan",
                                      name=product_name).get(),
             value=Decimal(''.join(char for char in
@@ -289,7 +298,7 @@ def create_or_update_spar_prices(html_product_list) -> None:
                                      unicodedata.normalize('NFKD', unit_price).split(",")[0] if
                                      char.isdigit())),
         )
-        new_spar_price.save()
+        # new_spar_price.save()
 
 
 def update_spar_product_table():

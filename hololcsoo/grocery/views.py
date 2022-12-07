@@ -31,7 +31,7 @@ class FilterBioProductsView(ListView):
 
     def get_queryset(self):
         query = self.request.GET.get("q")
-        day_of_newest_data = Price.objects.latest('timestamp').timestamp.day
+        day_of_newest_data = Price.objects.latest('timestamp').timestamp.minute
         bio_price_list = Price.objects.filter(
             Q(item__name__icontains=query) & Q(timestamp__day=day_of_newest_data) & Q(item__is_bio=True)
             # Q(item__name__icontains=query)
