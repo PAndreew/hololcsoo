@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django_filters',
     'django_celery_beat',
+    'corsheaders',
+    'rest_framework',
     "grocery.apps.GroceryConfig",
     "shopping_list.apps.ShoppingListConfig",
 ]
@@ -52,6 +54,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = "hololcsoo.urls"
@@ -157,3 +161,5 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute="*/60"),
     },
 }
+
+CORS_ORIGIN_ALLOW_ALL = True

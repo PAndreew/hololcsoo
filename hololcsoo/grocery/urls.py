@@ -1,9 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework import routers
+from .views import ProductViewSet, SearchView
 
-from . import views
+router = routers.DefaultRouter()
+router.register(r'products', ProductViewSet)
 
 urlpatterns = [
-    path("search/", views.SearchResultsView.as_view(), name="search_results"),
-    path("search/is_bio/", views.FilterBioProductsView.as_view(), name="bio_results"),
-    path("", views.HomePageView.as_view(), name="home"),
+    path('api/', include(router.urls)),
+    path('api/search/', SearchView.as_view()),
+    # add authentication URLs here, e.g. using Django REST Framework's built-in views
 ]

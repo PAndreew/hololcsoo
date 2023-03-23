@@ -1,39 +1,19 @@
-from django.views.generic import TemplateView, ListView
-from django.db.models import Q
-from django_filters.views import FilterView
-
 from .models import Grocery, Category, Item, Price
+from rest_framework import viewsets
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .serializers import ItemSerializer
 
-
-class HomePageView(TemplateView):
-    template_name = 'home-03-green.html'
-
-
-class SearchResultsView(ListView):
-    model = Price
-    template_name = 'home-03-green.html'
-    ordering = ['-value']
-
-    def get_queryset(self):
-        query = self.request.GET.get("q")
-        day_of_newest_data = Price.objects.latest('timestamp').timestamp.day
-        price_list = Price.objects.filter(
-            Q(item__name__icontains=query) & Q(timestamp__day=day_of_newest_data)
-            # Q(item__name__icontains=query)
-        ).order_by('value')
-        return price_list
-
-
-class FilterBioProductsView(ListView):
-    model = Price
-    template_name = 'home-03-green.html'
-    ordering = ['-value']
-
-    def get_queryset(self):
-        query = self.request.GET.get("q")
-        day_of_newest_data = Price.objects.latest('timestamp').timestamp.minute
-        bio_price_list = Price.objects.filter(
-            Q(item__name__icontains=query) & Q(timestamp__day=day_of_newest_data) & Q(item__is_bio=True)
-            # Q(item__name__icontains=query)
-        ).order_by('value')
-        return bio_price_list
+class SearchView(APIView):
+    def get_items_and_prices(self, request, format=None):
+        query = request.query_params.get('q', '')
+        products = Item.objects.filter(name__icontains=query)
+        serializer = ItemSerializer(products.order_by('price__value'), many=True)
+        return Response(serializer.data)
+    
+class ProductViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows products to be viewed or edited.
+    """
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
