@@ -28,6 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+#os.environ['SCRAPY_SETTINGS_MODULE'] = 'grocery_scrapers.settings'
 
 # Application definition
 
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django_filters',
     'django_celery_beat',
+    'grocery_scrapers',
     'corsheaders',
     'rest_framework',
     "grocery.apps.GroceryConfig",

@@ -41,6 +41,13 @@ class Item(models.Model):
     is_bio = models.BooleanField()
     is_favorite_of = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     on_stock = models.CharField(max_length=50)
+    energy = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="in kJ/100g")
+    protein = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="in g/100g")
+    fat = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="in g/100g")
+    carbohydrates = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="in g/100g")
+    fiber = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="in g/100g")
+    sodium = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="in mg/100g")
+    sugar = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="in g/100g")
 
     def __str__(self) -> str:
         return f"{self.name}"
